@@ -68,21 +68,24 @@ pct enter <vmid>
 Inside the container (as root):
 
 ```sh
+apk add curl bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/Elevennails/proxmoxNAS/main/bootstrap.sh)"
+```
+
+(`bash -c "$(...)"` runs the downloaded script with the terminal still
+attached as stdin, so the password prompts work — unlike `curl ... | sh`.)
+
+<details>
+<summary>Alternative: clone and run</summary>
+
+```sh
 apk add git
 git clone https://github.com/Elevennails/proxmoxNAS.git
 cd proxmoxNAS
 chmod +x bootstrap.sh
 ./bootstrap.sh
 ```
-
-Or, without git:
-
-```sh
-apk add curl
-curl -fsSLO https://raw.githubusercontent.com/Elevennails/proxmoxNAS/main/bootstrap.sh
-chmod +x bootstrap.sh
-./bootstrap.sh
-```
+</details>
 
 The script will prompt **twice** for each of two passwords:
 
