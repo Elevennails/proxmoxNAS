@@ -68,12 +68,14 @@ pct enter <vmid>
 Inside the container (as root):
 
 ```sh
-apk add curl bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/Elevennails/proxmoxNAS/main/bootstrap.sh)"
+apk add curl
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/Elevennails/proxmoxNAS/main/bootstrap.sh)"
 ```
 
-(`bash -c "$(...)"` runs the downloaded script with the terminal still
-attached as stdin, so the password prompts work — unlike `curl ... | sh`.)
+(`sh -c "$(...)"` runs the downloaded script with the terminal still
+attached as stdin, so the password prompts work — unlike `curl ... | sh`.
+Alpine's `/bin/sh` is BusyBox `ash` and is always present, so no extra
+shell needs to be installed.)
 
 <details>
 <summary>Alternative: clone and run</summary>
