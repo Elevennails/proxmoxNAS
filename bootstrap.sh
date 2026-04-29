@@ -60,7 +60,7 @@ SMBUSER_PW=$(prompt_password smbuser)
 #----------------------------------------------------------------------
 
 apk update
-apk add samba samba-common-tools sudo iptables dhcp-server-vanilla openssh shadow
+apk add samba samba-common-tools sudo iptables dnsmasq openssh shadow
 
 #----------------------------------------------------------------------
 # Network: eth0 = DHCP client, eth1 = static 10.10.10.1/24
@@ -80,31 +80,24 @@ iface eth1 inet static
 EOF
 
 #----------------------------------------------------------------------
-# ISC dhcpd — serves 10.10.10.10-10.10.10.50 on eth1 only
+# dnsmasq — DHCP only (DNS disabled), serves 10.10.10.10-10.10.10.50
+# on eth1 only.
 #----------------------------------------------------------------------
 
-mkdir -p /etc/dhcp
-cat > /etc/dhcp/dhcpd.conf <<'EOF'
-default-lease-time 600;
-max-lease-time 7200;
-authoritative;
+cat > /etc/dnsmasq.conf <<'EOF'
+# DHCP-only on the internal interface.
+port=0
+interface=eth1
+bind-interfaces
+no-resolv
+no-poll
 
-subnet 10.10.10.0 netmask 255.255.255.0 {
-    range 10.10.10.10 10.10.10.50;
-    option routers 10.10.10.1;
-    option subnet-mask 255.255.255.0;
-    option broadcast-address 10.10.10.255;
-}
+dhcp-range=10.10.10.10,10.10.10.50,255.255.255.0,12h
+dhcp-option=option:router,10.10.10.1
+dhcp-authoritative
 EOF
 
-# Bind dhcpd to eth1 only via /etc/conf.d/dhcpd
-if [ -f /etc/conf.d/dhcpd ] && grep -q '^DHCPD_IFACE=' /etc/conf.d/dhcpd; then
-    sed -i 's|^DHCPD_IFACE=.*|DHCPD_IFACE="eth1"|' /etc/conf.d/dhcpd
-else
-    echo 'DHCPD_IFACE="eth1"' >> /etc/conf.d/dhcpd
-fi
-
-rc-update add dhcpd default
+rc-update add dnsmasq default
 
 #----------------------------------------------------------------------
 # Firewall whitelist for eth0
@@ -211,7 +204,7 @@ rc-update add samba default
 #----------------------------------------------------------------------
 
 rc-service networking restart || true
-rc-service dhcpd       start   || true
+rc-service dnsmasq     start   || true
 rc-service local       start   || true
 rc-service sshd        restart || true
 rc-service samba       start   || true
@@ -222,7 +215,7 @@ cat <<EOF
 
 Bootstrap complete.
   eth0    : DHCP client
-  eth1    : 10.10.10.1/24 (dhcpd serving 10.10.10.10-10.10.10.50)
+  eth1    : 10.10.10.1/24 (dnsmasq serving DHCP 10.10.10.10-10.10.10.50)
   Firewall: /etc/whitelist.txt (eth0 default-deny, eth1 allowed)
   Users   : smbadmin (wheel/sudo, SSH), smbuser (samba only, nologin)
   Root    : disabled (password locked, shell /sbin/nologin)

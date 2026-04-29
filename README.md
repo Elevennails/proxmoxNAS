@@ -12,7 +12,7 @@ hardens the OS by creating two local accounts and disabling root.
 |---|---|
 | `eth0` | DHCP client (the "outside" / management bridge) |
 | `eth1` | Static `10.10.10.1/24` (the "inside" / VM-only bridge) |
-| DHCP server | `dhcpd` on **eth1 only**, range `10.10.10.10`–`10.10.10.50` |
+| DHCP server | `dnsmasq` (DHCP only, DNS disabled) bound to **eth1**, range `10.10.10.10`–`10.10.10.50` |
 | Firewall | INPUT default-deny on `eth0`; allow `lo`, allow all on `eth1`, allow source IPs/CIDRs listed in `/etc/whitelist.txt` (initially `192.168.26.0/24`) |
 | Samba | `samba` + `samba-common-tools` installed and enabled |
 | SSH | root login disabled, password auth on, only `smbadmin` permitted |
@@ -30,7 +30,7 @@ the host:
 1. **`vmbr0`** — normal bridge with an uplink (your LAN).
 2. **`vmbr1`** — local VM-only bridge, **no uplink** (no physical port,
    no other VLAN). This is the isolated 10.10.10.0/24 segment that
-   `dhcpd` will serve.
+   `dnsmasq` will serve.
 
 In the Proxmox UI: *Datacenter → \<node\> → System → Network → Create →
 Linux Bridge*. Leave **Bridge ports** empty for `vmbr1`.
@@ -101,7 +101,7 @@ Everything else is non-interactive.
 ```sh
 ip -4 addr show eth0       # should show a DHCP lease
 ip -4 addr show eth1       # should show 10.10.10.1/24
-rc-status                  # dhcpd, sshd, samba, local should be 'started'
+rc-status                  # dnsmasq, sshd, samba, local should be 'started'
 iptables -L INPUT -n -v    # allow lo, allow eth1, allow whitelisted srcs on eth0, drop eth0
 cat /etc/whitelist.txt
 ```
