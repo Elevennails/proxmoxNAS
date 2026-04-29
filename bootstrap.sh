@@ -60,7 +60,7 @@ SMBUSER_PW=$(prompt_password smbuser)
 #----------------------------------------------------------------------
 
 apk update
-apk add samba samba-common-tools sudo iptables dhcp openssh shadow
+apk add samba samba-common-tools sudo iptables dhcp-server-vanilla openssh shadow
 
 #----------------------------------------------------------------------
 # Network: eth0 = DHCP client, eth1 = static 10.10.10.1/24
